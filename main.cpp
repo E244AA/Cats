@@ -59,7 +59,7 @@ class Cat{
     private:
         string name;
         int hp, starvation, age, level, partner, born;
-        int Max_HP, Max_Starv, power, exp, Agr_Starv;
+        int Max_HP, Max_Starv, power, exp, Agr_Starv, Need_exp;
         bool gender, isMarried, alive;
     public:
         vector<int> children;
@@ -76,7 +76,7 @@ class Cat{
             isMarried = false;
             gender = bool(rand()%2);
             level = rand()%5;
-            exp = 0; Max_HP = 100; Max_Starv = 100; Agr_Starv = 60;
+            exp = 0; Max_HP = 100; Max_Starv = 100; Agr_Starv = 60, Need_exp = 5;
         }
 
         void setCharacteristics(int age, int starvation, int hp, string name, char gender, int level){
@@ -126,10 +126,11 @@ class Cat{
                 used[partner] = true;
             for(int i=depth; i>0; i--)
                 printf("  ");
+            printf("Lvl.%d ", level);
             cout << name;
-            //if(!alive) printf(" dead");
-            printf(" st: %d", starvation);
-            if(isMarried) cout <<" married with " << cats[partner].name << " st: " << cats[partner].starvation << "\n";
+            if(!alive) printf(" dead");
+            //printf(" st: %d", starvation);
+            if(isMarried) cout <<" married with Lvl." << cats[partner].level << " " << cats[partner].name << (cats[partner].isAlive() ? "\n" : " dead\n");
             else cout << "\n";
             if(children.size()>0){
                 for(unsigned int i=0; i<children.size(); i++)
@@ -179,14 +180,24 @@ class Cat{
             return Max_Starv;
         }
 
-
+        void levelUp(){
+            exp-=Need_exp;
+            level++;
+            Need_exp+=5*level;
+            Max_HP += 10;
+            Max_Starv += 10;
+        }
 
         void updateStatus(){
             age = (turn-born)/5;
-            if(starvation>(Max_Starv-20-5*level)) hp-=1+(starvation-(Max_Starv-20-5*level))/2;
+            if(starvation>(Max_Starv-20-5*level)) {
+                hp-=1+(starvation-(Max_Starv-20-5*level))/2;
+                exp++;
+            }
             starvation+=1;
             if(hp<1) die();
             if(hp<Max_HP&&starvation<(Max_Starv-30-5*level)) hp++;
+            while(exp>Need_exp) levelUp();
         }
 
         bool isAlive(){
@@ -289,9 +300,9 @@ void pushThread(){
         if(kbhit()){
             c = getch();
             if(c=='p'){
-                used.resize(alive.size());
+                used.resize(cats.size());
                 for(int i=0; i<used.size(); i++) used[i] = false;
-                for(int i=0; i<alive.size(); i++) dfs(0, alive[i].ind);
+                cats[0].showChildren(0);
                 alive.clear();
                 while(!kbhit());
                 c = getch();
